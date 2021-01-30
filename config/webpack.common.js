@@ -6,13 +6,17 @@ const paths = require('./paths')
 
 module.exports = {
   entry: {
-    'test-page': [paths.src + '/js/test-page.js']
+    'test-page': [paths.src + '/js/test-page.ts']
   },
 
   output: {
     path: paths.build,
     filename: '[name].bundle.js',
     publicPath: '/',
+  },
+
+  resolve: {
+    extensions: [ '.ts', '.js' ],
   },
 
   plugins: [
@@ -47,7 +51,8 @@ module.exports = {
 
   module: {
     rules: [
-      { test: /\.js$/, use: ['babel-loader'] },
+      // { test: /\.js$/, use: 'babel-loader' },
+      { test: /\.ts$/, use: 'ts-loader', exclude: /node_modules/ },
       { test: /\.hbs$/, loader: 'handlebars-loader' },
       { test: /\.(?:ico|gif|png|jpg|jpeg)$/i, type: 'asset/resource' },
       { test: /\.(woff(2)?|eot|ttf|otf|svg|)$/, type: 'asset/inline' },
