@@ -85,8 +85,8 @@ export default class ScanMonitor {
   }
 
   static _trapCtrlKeyListener(e: KeyboardEvent): void {
-    // only allow copy, cut, paste, print keyboard sequences
-    if (e.ctrlKey && !['KeyC', 'KeyX', 'KeyV', 'KeyP'].includes(e.code))
+    // only allow copy, cut, paste, print, reload, inspect keyboard sequences
+    if (e.ctrlKey && !['KeyC', 'KeyX', 'KeyV', 'KeyP', 'KeyR', 'KeyI'].includes(e.code))
       e.preventDefault()
   }
 }

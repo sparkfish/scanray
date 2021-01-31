@@ -59,6 +59,8 @@
     "webpack-merge": "^5.7.3"
   },
   "dependencies": {
+    "@types/luxon": "^1.25.1",
+    "luxon": "^1.25.0",
     "onscan.js": "^1.5.2",
     "string-algorithms": "^1.0.31"
   }
