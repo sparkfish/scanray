@@ -13,13 +13,12 @@ export default class HealthIdCard {
   constructor(data: string) {
     // high-level parsing into card parts
     this._data = data.trim()
-    if (this._data.slice(-1) == '?')
-      this._data = this._data.substring(0, this._data.length - 1)
+    if (this._data.slice(-1) == '?') this._data = this._data.substring(0, this._data.length - 1)
     this._cardParts = []
     this._data.split('^').forEach((val, index) => {
       this._cardParts[index] = val
     })
-    if (this._cardParts[0].length >= 2) {
+    if (this._cardParts.length > 0 && this._cardParts[0].length >= 2) {
       if (this._cardParts[0][0] == '%') {
         this._cardType = this._cardParts[0].slice(1, 3)
       }
@@ -38,26 +37,22 @@ export default class HealthIdCard {
     // dump core properties that have values
     const card: Dictionary<any> = {}
     const objectToInspect = Object.getPrototypeOf(this)
-    const props = Object.getOwnPropertyNames(
-      objectToInspect
-    ) as (keyof HealthIdCard)[]
+    const props = Object.getOwnPropertyNames(objectToInspect) as (keyof HealthIdCard)[]
     props.forEach((property) => {
-      if(this[property])
-        card[property] = this[property]
+      if (this[property]) card[property] = this[property]
     })
     return JSON.stringify(card)
   }
 
-  private getSegmentValue(segmentId: string): string {
-    const segment =
-      this._cardParts.find((s) => s.length > 2 && s.slice(0, 2) == segmentId) ||
-      ''
-    return segment.length > 2 ? segment.slice(2) : ''
+  private getSegmentValue(segmentId: string, defaultValue: string | undefined = ''): string {
+    const segIdLen = segmentId.length
+    const segment = this._cardParts.find((s) => s.length > segIdLen && s.slice(0, segIdLen) == segmentId) || ''
+    return segment.length > segIdLen ? segment.slice(segIdLen) : defaultValue
   }
 
   public getSegmentDate(segmentId: string): string {
     const date = DateTime.fromISO(this.getSegmentValue(segmentId))
-    return (date.isValid) ? date.toISODate() : ''
+    return date.isValid ? date.toISODate() : ''
   }
 
   public get firstName(): string {

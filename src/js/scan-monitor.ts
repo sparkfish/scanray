@@ -2,8 +2,8 @@ import { longestCommonSubstring } from 'string-algorithms'
 import onScan from 'onscan.js'
 
 export default class ScanMonitor {
-  enabledLogging: boolean = false
-  delim: string = '\n'
+  static enabledLogging: boolean = false
+  static delim: string = '\n'
 
   static activateScanMonitor(): void {
     // prevent special Ctrl-key sequences from triggering browser controls (as known to occur AAMVA barcodes)
@@ -14,7 +14,7 @@ export default class ScanMonitor {
       // convert or limit scanned values on-the-fly
       keyCodeMapper(e: KeyboardEvent) {
         if (onScan.isScanInProgressFor(document)) {
-          if (this.enabledLogging)
+          if (ScanMonitor.enabledLogging)
             console.log(
               ` Pressed: [${e.key}] => [${e.key.charCodeAt(0)}--${
                 e.ctrlKey ? 'Ctrl' : ''
@@ -23,7 +23,7 @@ export default class ScanMonitor {
 
           // convert CRLF from Ctrl+J and Ctrl+M sequence; ignore other Ctrl-modified keys
           if (e.ctrlKey)
-            return (['KeyJ', 'KeyM'] as string[]).includes(e.code) ? this.delim : ''
+            return (['KeyJ', 'KeyM'] as string[]).includes(e.code) ? ScanMonitor.delim : ''
 
           // test against fixed set of printable chars (instead of an expensive regex)
           const printable =
@@ -46,11 +46,11 @@ export default class ScanMonitor {
           activeElement instanceof HTMLTextAreaElement ||
           activeElement instanceof HTMLInputElement
         ) {
-          if (this.enabledLogging)
+          if (ScanMonitor.enabledLogging)
             console.log(`activeElement.value: [${activeElement.value}]`)
           longestCommonSubstring([
             activeElement.value.trim(),
-            (scanData.trim() as any).replaceAll(this.delim, ''),
+            (scanData.trim() as any).replaceAll(ScanMonitor.delim, ''),
           ]).forEach((overlappingStringToRemove: string) => {
             // remove text from field likely to have come from scanner => hence a min-length check
             const text = activeElement.value.trim()
