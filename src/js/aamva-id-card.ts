@@ -149,13 +149,7 @@ export default class AamvaIdCard {
     return this._version || 0
   }
 
-  //   public get issuerId(): string {
-  //     return this._issuerId
-  //     return ''
-  //   }
-
   /*
-
     TODO: decode race / ethnicity
 
   Codes for race or ethnicity of the cardholder, as defined in ANSI D20.
@@ -171,7 +165,6 @@ Possible values and interpretations:
         H = Hispanic Origin (A Person of Mexican, Puerto Rican, Cuban, Central or South American or Other Spanish Culture or Origin, Regardless of Race)
         O = Not of Hispanic Origin (Any Person Other Than Hispanic)
         U = Unknown
-
    */
 
   public get race(): string {
@@ -183,10 +176,33 @@ Possible values and interpretations:
   }
 
   public get eyeColor(): string {
+      /*
+      BLK = Black
+BLU = Blue
+BRO = Brown
+GRY = Gray
+GRN = Green
+HAZ = Hazel
+MAR = Maroon
+PNK = Pink
+DIC = Dichromatic
+UNK = Unknown
+       */
     return this.getSegmentValue('DAY', undefined) || ''
   }
 
   public get hairColor(): string {
+      /*
+      BAL = Bald
+BLK = Black
+BLN = Blond
+BRO = Brown
+GRY = Grey
+RED = Red/Auburn
+SDY = Sandy
+WHI = White
+UNK = Unknown
+      */
     return this.getSegmentValue('DAZ', undefined) || ''
   }
 
