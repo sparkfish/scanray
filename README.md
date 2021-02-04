@@ -7,8 +7,8 @@ It's a common need in the healthcare settings to enter patient demographics accu
 
 This sample project includes the scan capture tooling as well as a test pages for validation purposes.
 
-![AAMVA ID Card Sample](public/dl-sample.png)
-![Health ID Card Sample](public/hc-sample.png)
+<p align="center"><img src="public/dl-sample.png" alt="AAMVA ID Card Sample" /></p>
+<p align="center"><img src="public/hc-sample.png" alt="Health ID Card Sample" /></p>
 
 # Browser Scan Events
 
@@ -34,8 +34,7 @@ To simplify the scanning process, this packge intercepts these scan events to tr
 
 Scan events capture fielded elements so that they can easily be bound to HTML forms:
 
-![Card Scanning Event](public/scan-sample.png)
-
+<p align="center"><img src="public/scan-sample.png" alt="Card Scanning Event" /></p>
 
 # Health Identification Cards
 
