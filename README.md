@@ -7,8 +7,8 @@ It's a common need in the healthcare settings to enter patient demographics accu
 
 This sample project includes the scan capture tooling as well as a test pages for validation purposes.
 
-<p align="center"><img src="public/dl-sample.png" alt="AAMVA ID Card Sample" /></p>
 <p align="center"><img src="public/hc-sample.png" alt="Health ID Card Sample" /></p>
+<p align="center"><img src="public/dl-sample.png" alt="AAMVA ID Card Sample" /></p>
 
 # Browser Scan Events
 
