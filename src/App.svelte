@@ -1,37 +1,36 @@
-<svelte:head>
-	<script src="https://cdn.jsdelivr.net/gh/pkoretic/pdf417-generator@master/lib/libbcmath.js"></script>
-	<script src="https://cdn.jsdelivr.net/gh/pkoretic/pdf417-generator@master/lib/bcmath.js"></script>
-	<script src="https://cdn.jsdelivr.net/gh/pkoretic/pdf417-generator@master/lib/pdf417.js"></script>
-</svelte:head>
-
 <script>
-  import { onMount, onDestroy } from "svelte";
-  import Form from "@svelteschool/svelte-forms";
-  import IdScanMonitor from "./id-scan-monitor";
+  import { onMount, onDestroy } from 'svelte'
+  import Form from '@svelteschool/svelte-forms'
+  import IdScanMonitor from './id-scan-monitor'
 
   // initialize scanner and events
-  $: values = {};
+  $: values = {}
 
-  document.addEventListener("healthIdScan", (e) => {
-    values = e.detail;
-    console.log(`healthIdScan: [${e.detail.toJson()}]`);
-  });
-  document.addEventListener("aamvaIdScan", (e) => {
-    values = e.detail;
-    console.log(`aamvaIdScan: [${e.detail.toJson()}]`);
-  });
+  document.addEventListener('healthIdScan', (e) => {
+    values = e.detail
+    console.log(`healthIdScan: [${e.detail.toJson()}]`)
+  })
+  document.addEventListener('aamvaIdScan', (e) => {
+    values = e.detail
+    console.log(`aamvaIdScan: [${e.detail.toJson()}]`)
+  })
 
   onMount(() => {
-    IdScanMonitor.activateScanMonitor();
-  });
+    IdScanMonitor.activateScanMonitor()
+  })
 
   onDestroy(() => {
-    IdScanMonitor.deactivateScanMonitor();
-  });
-
+    IdScanMonitor.deactivateScanMonitor()
+  })
 </script>
 
+<svelte:head
+  ><script src="https://cdn.jsdelivr.net/gh/pkoretic/pdf417-generator@master/lib/libbcmath.js"></script><script
+    src="https://cdn.jsdelivr.net/gh/pkoretic/pdf417-generator@master/lib/bcmath.js"></script><script
+    src="https://cdn.jsdelivr.net/gh/pkoretic/pdf417-generator@master/lib/pdf417.js"></script></svelte:head
+>
 <div class="app">
+  <input placeholder="Test here">
   <Form bind:values>
     <div hidden={!values?.firstName?.length > 0}>
       <label for="firstName">firstName</label>
@@ -126,7 +125,7 @@
     align-items: center;
     justify-content: center;
   }
-  
+
   .app {
     text-align: center;
     color: #333;

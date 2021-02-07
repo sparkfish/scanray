@@ -6,14 +6,11 @@ import AamvsIdCard from './aamva-id-card'
 export { onScan }
 
 export default class IdScanMonitor {
-  static enabledLogging: boolean = false
-  static delim: string = '|~|'
+  static enabledLogging: boolean = true
 
-  static activateScanMonitor(delim: string = '|~|'): void {
-    IdScanMonitor.delim = delim
-
+  static activateScanMonitor(blockBadKeyboardShortcuts: boolean = true): void {
     // prevent special Ctrl-key sequences from triggering browser controls (as known to occur AAMVA barcodes)
-    document.addEventListener('keydown', IdScanMonitor._trapCtrlKeyListener)
+    if (blockBadKeyboardShortcuts) document.addEventListener('keydown', IdScanMonitor._trapCtrlKeyListener)
 
     // enable bar code scan events for the entire document
     onScan.attachTo(document, {
@@ -21,19 +18,15 @@ export default class IdScanMonitor {
       keyCodeMapper(e: KeyboardEvent) {
         if (onScan.isScanInProgressFor(document)) {
           if (IdScanMonitor.enabledLogging)
-            console.log(
-              ` Pressed: [${e.key}] => [${e.key.charCodeAt(0)}--${
-                e.ctrlKey ? 'Ctrl' : ''
-              }${e.shiftKey ? 'Shift' : ''}${e.altKey ? 'Alt' : ''}]`
-            )
+            console.log(`Pressed: [${e.key}] => [${e.key.charCodeAt(0)}--${e.ctrlKey ? 'Ctrl' : ''}${e.shiftKey ? 'Shift' : ''}]`)
 
-          // convert CRLF from Ctrl+J and Ctrl+M sequence; ignore other Ctrl-modified keys
-          if (e.ctrlKey)
-            return (['KeyJ', 'KeyM'] as string[]).includes(e.code) ? IdScanMonitor.delim : ''
+          // convert special control sequences seen in AAMVA barcodes
+          if (e.ctrlKey && e.code == 'KeyJ') return '[LF]' // Ctrl+J
+          if (e.ctrlKey && e.code == 'KeyM') return '[CR]' // Ctrl+M
+          if (e.ctrlKey && e.shiftKey && e.code == 'Digit6') return '[RS]' // Ctrl+Shift+6
 
           // test against fixed set of printable chars (instead of an expensive regex)
-          const printable =
-            ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~'
+          const printable = ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~'
           if (printable.includes(e.key)) return e.key
         }
         return onScan.decodeKeyEvent(e)
@@ -41,38 +34,29 @@ export default class IdScanMonitor {
 
       // emit parsed scan details and clean up any on-screen scan garbage
       onScan(scanData: string) {
-        console.log(`scanned: [${scanData}]`)
+        if (IdScanMonitor.enabledLogging) console.log(`scanned: [${scanData}]`)
+
+        // handle common control key translation optionally performed by scanner programming: [LF][RS][CR]
+        let fixedScanData = scanData.replaceAll('[LF]', '\x0A').replaceAll('[CR]', '\x0D').replaceAll('[RS]', '\x1E')
 
         // detect scan event type and emit accordingly
-        if(scanData?.[0] == '%')
-        {
-          let hc = new HealthIdCard(scanData)
+        if (fixedScanData?.[0] == '%') {
+          let hc = new HealthIdCard(fixedScanData)
           IdScanMonitor._emitHealthIdScanEvent(hc)
         }
-        if(scanData?.[0] == '@')
-        {
-          let dl = new AamvsIdCard(scanData, IdScanMonitor.delim)
+        if (fixedScanData?.[0] == '@') {
+          let dl = new AamvsIdCard(fixedScanData)
           IdScanMonitor._emitAamvaIdScanEvent(dl)
         }
 
         // remove scanned data from any text input element having focus at time of scan
         const activeElement = document.activeElement
-        if (
-          activeElement instanceof HTMLTextAreaElement ||
-          activeElement instanceof HTMLInputElement
-        ) {
-          if (IdScanMonitor.enabledLogging)
-            console.log(`activeElement.value: [${activeElement.value}]`)
-          longestCommonSubstring([
-            activeElement.value.trim(),
-            (scanData.trim() as any).replaceAll(IdScanMonitor.delim, ''),
-          ]).forEach((overlappingStringToRemove: string) => {
+        if (activeElement instanceof HTMLTextAreaElement || activeElement instanceof HTMLInputElement) {
+          if (IdScanMonitor.enabledLogging) console.log(`activeElement.value: [${activeElement.value}]`)
+          longestCommonSubstring([activeElement.value.trim(), scanData.trim()]).forEach((overlappingStringToRemove: string) => {
             // remove text from field likely to have come from scanner => hence a min-length check
             const text = activeElement.value.trim()
-            if (
-              overlappingStringToRemove.length > 10 &&
-              text.includes(overlappingStringToRemove)
-            )
+            if (overlappingStringToRemove.length > 10 && text.includes(overlappingStringToRemove))
               activeElement.value = text.replace(overlappingStringToRemove, '')
           })
         }
@@ -100,11 +84,12 @@ export default class IdScanMonitor {
   }
 
   static _trapCtrlKeyListener(e: KeyboardEvent): void {
-    // only allow copy, cut, paste, print, find, reload, inspect keyboard sequences
-    if (e.ctrlKey && !['KeyC', 'KeyX', 'KeyV', 'KeyP', 'KeyF', 'KeyR', 'KeyI'].includes(e.code))
-    {
+    // only allow these whitelisted keyboard sequences:
+    // copy, cut, paste, print, find, reload, inspect, select all
+    if (e.ctrlKey && !['KeyC', 'KeyX', 'KeyV', 'KeyP', 'KeyF', 'KeyR', 'KeyI', 'KeyA'].includes(e.code)) {
       e.preventDefault()
-      console.log(`Blocked control sequence: [${JSON.stringify({ code: e.code, ctrlKey: e.ctrlKey, key: e.key })}]`)
+      if (IdScanMonitor.enabledLogging)
+        console.log(`Blocked control sequence: [${JSON.stringify({ code: e.code, ctrlKey: e.ctrlKey, key: e.key })}]`)
     }
   }
 }
