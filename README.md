@@ -18,10 +18,10 @@ To simplify the scanning process, this packge intercepts these scan events to tr
 
 
 ```javascript
-  import IdScanMonitor from "./id-scan-monitor";
+  import Scanray from "./scanray";
 
   // activate passive listening to enable scan events
-  IdScanMonitor.activateScanMonitor();
+  Scanray.activateMonitor();
 
   // access values from scan event detail
   document.addEventListener("healthIdScan", (e) => {

@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte'
   import Form from '@svelteschool/svelte-forms'
-  import IdScanMonitor from './id-scan-monitor'
+  import Scanray from './scanray'
 
   // initialize scanner and events
   $: values = {}
@@ -16,11 +16,11 @@
   })
 
   onMount(() => {
-    IdScanMonitor.activateScanMonitor()
+    Scanray.activateMonitor()
   })
 
   onDestroy(() => {
-    IdScanMonitor.deactivateScanMonitor()
+    Scanray.deactivateMonitor()
   })
 </script>
 

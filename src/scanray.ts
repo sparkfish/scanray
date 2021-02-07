@@ -5,19 +5,19 @@ import AamvsIdCard from './aamva-id-card'
 
 export { onScan }
 
-export default class IdScanMonitor {
+export default class Scanray {
   static enabledLogging: boolean = true
 
-  static activateScanMonitor(blockBadKeyboardShortcuts: boolean = true): void {
+  static activateMonitor(blockBadKeyboardShortcuts: boolean = true): void {
     // prevent special Ctrl-key sequences from triggering browser controls (as known to occur AAMVA barcodes)
-    if (blockBadKeyboardShortcuts) document.addEventListener('keydown', IdScanMonitor._trapCtrlKeyListener)
+    if (blockBadKeyboardShortcuts) document.addEventListener('keydown', Scanray._trapCtrlKeyListener)
 
     // enable bar code scan events for the entire document
     onScan.attachTo(document, {
       // convert or limit scanned values on-the-fly
       keyCodeMapper(e: KeyboardEvent) {
         if (onScan.isScanInProgressFor(document)) {
-          if (IdScanMonitor.enabledLogging)
+          if (Scanray.enabledLogging)
             console.log(`Pressed: [${e.key}] => [${e.key.charCodeAt(0)}--${e.ctrlKey ? 'Ctrl' : ''}${e.shiftKey ? 'Shift' : ''}]`)
 
           // convert special control sequences seen in AAMVA barcodes
@@ -34,7 +34,7 @@ export default class IdScanMonitor {
 
       // emit parsed scan details and clean up any on-screen scan garbage
       onScan(scanData: string) {
-        if (IdScanMonitor.enabledLogging) console.log(`scanned: [${scanData}]`)
+        if (Scanray.enabledLogging) console.log(`scanned: [${scanData}]`)
 
         // handle common control key translation optionally performed by scanner programming: [LF][RS][CR]
         let fixedScanData = scanData.replaceAll('[LF]', '\x0A').replaceAll('[CR]', '\x0D').replaceAll('[RS]', '\x1E')
@@ -42,17 +42,17 @@ export default class IdScanMonitor {
         // detect scan event type and emit accordingly
         if (fixedScanData?.[0] == '%') {
           let hc = new HealthIdCard(fixedScanData)
-          IdScanMonitor._emitHealthIdScanEvent(hc)
+          Scanray._emitHealthIdScanEvent(hc)
         }
         if (fixedScanData?.[0] == '@') {
           let dl = new AamvsIdCard(fixedScanData)
-          IdScanMonitor._emitAamvaIdScanEvent(dl)
+          Scanray._emitAamvaIdScanEvent(dl)
         }
 
         // remove scanned data from any text input element having focus at time of scan
         const activeElement = document.activeElement
         if (activeElement instanceof HTMLTextAreaElement || activeElement instanceof HTMLInputElement) {
-          if (IdScanMonitor.enabledLogging) console.log(`activeElement.value: [${activeElement.value}]`)
+          if (Scanray.enabledLogging) console.log(`activeElement.value: [${activeElement.value}]`)
           longestCommonSubstring([activeElement.value.trim(), scanData.trim()]).forEach((overlappingStringToRemove: string) => {
             // remove text from field likely to have come from scanner => hence a min-length check
             const text = activeElement.value.trim()
@@ -64,8 +64,8 @@ export default class IdScanMonitor {
     })
   }
 
-  static deactivateScanMonitor(): void {
-    document.removeEventListener('keydown', IdScanMonitor._trapCtrlKeyListener)
+  static deactivateMonitor(): void {
+    document.removeEventListener('keydown', Scanray._trapCtrlKeyListener)
     onScan.detachFrom(document)
   }
 
@@ -88,7 +88,7 @@ export default class IdScanMonitor {
     // copy, cut, paste, print, find, reload, inspect, select all
     if (e.ctrlKey && !['KeyC', 'KeyX', 'KeyV', 'KeyP', 'KeyF', 'KeyR', 'KeyI', 'KeyA'].includes(e.code)) {
       e.preventDefault()
-      if (IdScanMonitor.enabledLogging)
+      if (Scanray.enabledLogging)
         console.log(`Blocked control sequence: [${JSON.stringify({ code: e.code, ctrlKey: e.ctrlKey, key: e.key })}]`)
     }
   }
