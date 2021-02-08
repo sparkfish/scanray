@@ -136,6 +136,16 @@ npm start
 Navigate to [localhost:8080](http://localhost:8080) to use the local test application.
 
 
+## TODO
+
+- [ ] Convert from static Scanray to object instance
+- [ ] Add more options to code more parameterizable
+- [ ] Add trace level setting for console logging
+- [ ] Issue PR to onScan.js to get away from deprecated `keyCode` references
+- [ ] Issue PR to onScan.js to add `scanStart` and `scanEnd` events
+- [ ] Issue PR to onScan.js to track prefix from start of new scan and add requirePrefix param to `onScan.isScanInProgressFor()`
+
+
 ## Credits
 
 This library heavily relies on [onScan.js](https://github.com/axenox/onscan.js) by Andrej Kabachnik.

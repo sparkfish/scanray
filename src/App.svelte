@@ -16,7 +16,13 @@
   })
 
   onMount(() => {
-    Scanray.activateMonitor()
+    const options = {
+      blockKeyboardEventsDuringScan: true,
+      enabledLogging: false,
+      prefixKeyCodes: [126], // ~
+      suffixKeyCodes: [13], // <enter>
+    }
+    Scanray.activateMonitor(options)
   })
 
   onDestroy(() => {
@@ -30,7 +36,7 @@
     src="https://cdn.jsdelivr.net/gh/pkoretic/pdf417-generator@master/lib/pdf417.js"></script></svelte:head
 >
 <div class="app">
-  <input placeholder="Test here">
+  <input placeholder="Test here" />
   <Form bind:values>
     <div hidden={!values?.firstName?.length > 0}>
       <label for="firstName">firstName</label>

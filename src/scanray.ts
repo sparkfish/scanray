@@ -5,82 +5,142 @@ import AamvsIdCard from './aamva-id-card'
 
 export { onScan }
 
-export default class Scanray {
-  static enabledLogging: boolean = true
+interface scanrayOptions {
+  blockKeyboardEventsDuringScan?: boolean
+  blockBadKeyboardShortcutEvents?: boolean
+  enabledLogging?: boolean
+  prefixKeyCodes?: number[]
+  suffixKeyCodes?: number[]
+}
 
-  static activateMonitor(blockBadKeyboardShortcuts: boolean = true): void {
-    // prevent special Ctrl-key sequences from triggering browser controls (as known to occur AAMVA barcodes)
-    if (blockBadKeyboardShortcuts) document.addEventListener('keydown', Scanray._trapCtrlKeyListener)
+export default class Scanray {
+  static options: scanrayOptions
+  static currentPrefix: string
+
+  static activateMonitor(options: scanrayOptions): void {
+    Scanray.options = options || {}
+
+    // prevent keyboard events from being triggered during scan
+    if (options?.blockKeyboardEventsDuringScan) document.addEventListener('keydown', Scanray._trapKeyboardEventsDuringScan)
+
+    // prevent special Ctrl-key sequences from triggering browser controls (as known to occur in AAMVA barcodes)
+    if (options?.blockBadKeyboardShortcutEvents) document.addEventListener('keydown', Scanray._trapCtrlKeyListener)
 
     // enable bar code scan events for the entire document
     onScan.attachTo(document, {
-      // convert or limit scanned values on-the-fly
-      keyCodeMapper(e: KeyboardEvent) {
-        if (onScan.isScanInProgressFor(document)) {
-          if (Scanray.enabledLogging)
-            console.log(`Pressed: [${e.key}] => [${e.key.charCodeAt(0)}--${e.ctrlKey ? 'Ctrl' : ''}${e.shiftKey ? 'Shift' : ''}]`)
-
-          // convert special control sequences seen in AAMVA barcodes
-          if (e.ctrlKey && e.code == 'KeyJ') return '[LF]' // Ctrl+J
-          if (e.ctrlKey && e.code == 'KeyM') return '[CR]' // Ctrl+M
-          if (e.ctrlKey && e.shiftKey && e.code == 'Digit6') return '[RS]' // Ctrl+Shift+6
-
-          // test against fixed set of printable chars (instead of an expensive regex)
-          const printable = ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~'
-          if (printable.includes(e.key)) return e.key
-        }
-        return onScan.decodeKeyEvent(e)
-      },
-
-      // emit parsed scan details and clean up any on-screen scan garbage
-      onScan(scanData: string) {
-        if (Scanray.enabledLogging) console.log(`scanned: [${scanData}]`)
-
-        // handle common control key translation optionally performed by scanner programming: [LF][RS][CR]
-        let fixedScanData = scanData.replaceAll('[LF]', '\x0A').replaceAll('[CR]', '\x0D').replaceAll('[RS]', '\x1E')
-
-        // detect scan event type and emit accordingly
-        if (fixedScanData?.[0] == '%') {
-          let hc = new HealthIdCard(fixedScanData)
-          Scanray._emitHealthIdScanEvent(hc)
-        }
-        if (fixedScanData?.[0] == '@') {
-          let dl = new AamvsIdCard(fixedScanData)
-          Scanray._emitAamvaIdScanEvent(dl)
-        }
-
-        // remove scanned data from any text input element having focus at time of scan
-        const activeElement = document.activeElement
-        if (activeElement instanceof HTMLTextAreaElement || activeElement instanceof HTMLInputElement) {
-          if (Scanray.enabledLogging) console.log(`activeElement.value: [${activeElement.value}]`)
-          longestCommonSubstring([activeElement.value.trim(), scanData.trim()]).forEach((overlappingStringToRemove: string) => {
-            // remove text from field likely to have come from scanner => hence a min-length check
-            const text = activeElement.value.trim()
-            if (overlappingStringToRemove.length > 10 && text.includes(overlappingStringToRemove))
-              activeElement.value = text.replace(overlappingStringToRemove, '')
-          })
-        }
-      },
+      // add support for guillemets (french quotation marks) as prefix/suffix for more reliable scanning
+      prefixKeyCodes: options?.prefixKeyCodes || [171], // «
+      suffixKeyCodes: options?.suffixKeyCodes || [187], // »
+      onScan: Scanray.onScan,
+      onScanError: Scanray._resetStateAfterScan,
+      keyCodeMapper: Scanray.keyCodeMapper,
     })
+
+    Scanray._resetStateAfterScan()
   }
 
   static deactivateMonitor(): void {
+    Scanray._resetStateAfterScan()
+    document.removeEventListener('keydown', Scanray._trapKeyboardEventsDuringScan)
     document.removeEventListener('keydown', Scanray._trapCtrlKeyListener)
     onScan.detachFrom(document)
   }
 
-  static _emitAamvaIdScanEvent(detail: any): void {
-    const idScanEvent = new CustomEvent<any>('aamvaIdScan', {
-      detail: detail,
-    })
-    document.dispatchEvent(idScanEvent)
+  // emit parsed scan details and clean up any on-screen scan garbage
+  static onScan(scanData: string): void {
+    const options = Scanray.options
+    if (options.enabledLogging) console.log(`scanned: [${scanData}]`)
+
+    // handle common control key translation optionally performed by scanner programming: [LF][RS][CR]
+    let fixedScanData = scanData.replaceAll('[LF]', '\x0A').replaceAll('[CR]', '\x0D').replaceAll('[RS]', '\x1E')
+
+    // detect scan event type and emit accordingly
+    if (fixedScanData?.[0] == '%') {
+      let hc = new HealthIdCard(fixedScanData)
+      Scanray._emitHealthIdScanEvent(hc)
+    }
+    if (fixedScanData?.[0] == '@') {
+      let dl = new AamvsIdCard(fixedScanData)
+      Scanray._emitAamvaIdScanEvent(dl)
+    }
+
+    // remove scanned data from any text input element having focus at time of scan
+    const activeElement = document.activeElement
+    if (activeElement instanceof HTMLTextAreaElement || activeElement instanceof HTMLInputElement) {
+      if (activeElement.value.includes(Scanray.currentPrefix))
+        activeElement.value = activeElement.value.replaceAll(Scanray.currentPrefix, '')
+      const minLen = 10
+      const formValue = activeElement.value.trim()
+      const scanValue = `${Scanray.currentPrefix}${scanData}`.trim()
+      if (options.enabledLogging) console.log(`activeElement.value: [${formValue}]`)
+      if (scanValue.length == 0 || formValue.length == 0) return
+      longestCommonSubstring([formValue, scanValue]).forEach((overlappingStringToRemove: string) => {
+        // remove text from field likely to have come from scanner => hence a min-length check
+        if (overlappingStringToRemove.length > minLen && formValue.includes(overlappingStringToRemove))
+          activeElement.value = formValue.replace(overlappingStringToRemove, '')
+      })
+    }
+
+    Scanray._resetStateAfterScan()
   }
 
-  static _emitHealthIdScanEvent(detail: any): void {
-    const idScanEvent = new CustomEvent<any>('healthIdScan', {
-      detail: detail,
-    })
-    document.dispatchEvent(idScanEvent)
+  // convert or limit scanned values on-the-fly
+  static keyCodeMapper(e: KeyboardEvent) {
+    const options = Scanray.options
+    if (onScan.isScanInProgressFor(document)) {
+      // skip custom mapping of prefix
+      if (Scanray.accumulatedScanData().length == 0 && Scanray.isPrefix(e.key)) {
+        Scanray.currentPrefix = e.key
+        return onScan.decodeKeyEvent(e)
+      }
+
+      if (options.enabledLogging)
+        console.log(`Pressed: [${e.key}] => [${e.ctrlKey ? 'Ctrl' : ''}${e.shiftKey ? 'Shift' : ''}${e.key.charCodeAt(0)}]`)
+
+      // convert special control sequences seen in AAMVA barcodes
+      if (e.ctrlKey && e.code == 'KeyJ') return '[LF]' // Ctrl+J
+      if (e.ctrlKey && e.code == 'KeyM') return '[CR]' // Ctrl+M
+      if (e.ctrlKey && e.shiftKey && e.code == 'Digit6') return '[RS]' // Ctrl+Shift+6
+
+      // test against fixed set of printable chars (instead of an expensive regex)
+      const printable = ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~'
+      if (printable.includes(e.key)) return e.key
+    }
+    return onScan.decodeKeyEvent(e)
+  }
+
+  static _resetStateAfterScan(): void {
+    Scanray.currentPrefix = ' '
+  }
+
+  static accumulatedScanData(): string {
+    return (document as any).scannerDetectionData?.vars?.accumulatedString?.[0] || ''
+  }
+
+  static prefixesExpected(): number[] {
+    return (document as any)?.scannerDetectionData?.options?.prefixKeyCodes || []
+  }
+
+  static isPrefix(char: string): boolean {
+    return Scanray.prefixesExpected().includes((char || ' ').charCodeAt(0))
+  }
+
+  static currentScanHasPrefix(): boolean {
+    // if available, returns any current prefix for the code being scanned
+    const firstChar = (Scanray.accumulatedScanData() || ' ')[0]
+    return Scanray.isPrefix(firstChar) || Scanray.isPrefix(Scanray.currentPrefix)
+  }
+
+  static canBlockKeyboardEvents(): boolean {
+    // determines if prefix was scanned in current conditional scanning event
+    return onScan.isScanInProgressFor(document) && Scanray.currentScanHasPrefix()
+  }
+
+  static _trapKeyboardEventsDuringScan(e: KeyboardEvent): void {
+    if (Scanray.canBlockKeyboardEvents()) {
+      e.preventDefault()
+      //if (Scanray.options.enabledLogging) console.log(`Blocked keyboard event during scan`)
+    }
   }
 
   static _trapCtrlKeyListener(e: KeyboardEvent): void {
@@ -88,8 +148,18 @@ export default class Scanray {
     // copy, cut, paste, print, find, reload, inspect, select all
     if (e.ctrlKey && !['KeyC', 'KeyX', 'KeyV', 'KeyP', 'KeyF', 'KeyR', 'KeyI', 'KeyA'].includes(e.code)) {
       e.preventDefault()
-      if (Scanray.enabledLogging)
+      if (Scanray.options.enabledLogging)
         console.log(`Blocked control sequence: [${JSON.stringify({ code: e.code, ctrlKey: e.ctrlKey, key: e.key })}]`)
     }
+  }
+
+  static _emitAamvaIdScanEvent(detail: any): void {
+    const idScanEvent = new CustomEvent<any>('aamvaIdScan', { detail: detail })
+    document.dispatchEvent(idScanEvent)
+  }
+
+  static _emitHealthIdScanEvent(detail: any): void {
+    const idScanEvent = new CustomEvent<any>('healthIdScan', { detail: detail })
+    document.dispatchEvent(idScanEvent)
   }
 }
