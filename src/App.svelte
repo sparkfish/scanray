@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte'
   import Form from '@svelteschool/svelte-forms'
-  import Scanray from './scanray'
+  import Scanray, { onScan } from './scanray'
 
   // initialize scanner and events
   $: values = {}
@@ -23,6 +23,11 @@
       suffixKeyCodes: [13], // <enter>
     }
     Scanray.activateMonitor(options)
+
+    // simulate a scan event, for example, in case user does not have a barcode scanner
+    window.setTimeout(() => {
+      onScan.simulate(document, '%WH9104440260ZGP444461171^SMITH/GABRIEL^DB19860101?')
+    }, 1000)
   })
 
   onDestroy(() => {
@@ -36,7 +41,10 @@
     src="https://cdn.jsdelivr.net/gh/pkoretic/pdf417-generator@master/lib/pdf417.js"></script></svelte:head
 >
 <div class="app">
-  <input placeholder="Test here" />
+  <input placeholder="Test scanner here..." />
+
+  <hr noshade="noshade" size="4" hidden={!values?.lastName} />
+
   <Form bind:values>
     <div hidden={!values?.firstName?.length > 0}>
       <label for="firstName">firstName</label>
