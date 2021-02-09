@@ -7,6 +7,7 @@ export { onScan }
 
 interface scanrayOptions {
   blockKeyboardEventsDuringScan?: boolean
+  blockAltKeyEvents?: boolean
   blockBadKeyboardShortcutEvents?: boolean
   enabledLogging?: boolean
   prefixKeyCodes?: number[]
@@ -16,12 +17,16 @@ interface scanrayOptions {
 export default class Scanray {
   static options: scanrayOptions
   static currentPrefix: string
+  static altKeySequence: string
 
   static activateMonitor(options: scanrayOptions): void {
     Scanray.options = options || {}
 
     // prevent keyboard events from being triggered during scan
     if (options?.blockKeyboardEventsDuringScan) document.addEventListener('keydown', Scanray._trapKeyboardEventsDuringScan)
+
+    // prevent alt-key keyboard events from creating chars in browser window
+    if (options?.blockAltKeyEvents) document.addEventListener('keydown', Scanray._trapAltKeyListener)
 
     // prevent special Ctrl-key sequences from triggering browser controls (as known to occur in AAMVA barcodes)
     if (options?.blockBadKeyboardShortcutEvents) document.addEventListener('keydown', Scanray._trapCtrlKeyListener)
@@ -85,17 +90,41 @@ export default class Scanray {
   }
 
   // convert or limit scanned values on-the-fly
-  static keyCodeMapper(e: KeyboardEvent) {
+  static keyCodeMapper(e: KeyboardEvent): string {
     const options = Scanray.options
     if (onScan.isScanInProgressFor(document)) {
-      // skip custom mapping of prefix
-      if (Scanray.accumulatedScanData().length == 0 && Scanray.isPrefix(e.key)) {
-        Scanray.currentPrefix = e.key
-        return onScan.decodeKeyEvent(e)
+      if (options.enabledLogging)
+        console.log(
+          `Pressed: [${e.key}] => [` +
+            `${e.ctrlKey ? 'Ctrl' : ''}` +
+            `${e.shiftKey ? 'Shift' : ''}` +
+            `${e.altKey ? 'Alt' : ''}` +
+            `${e.key.charCodeAt(0)} (${e.code})]`
+        )
+
+      // detect 4-digit alt-key sequences (e.g., alt+0182 => '¶')
+      let altKey: string = ''
+      if (e.altKey && e.code.startsWith('Numpad')) {
+        e.preventDefault()
+        e.stopImmediatePropagation()
+        Scanray.altKeySequence += e.key
+        if (Scanray.altKeySequence.length == 4) {
+          const code = parseInt(Scanray.altKeySequence)
+          if (!isNaN(code)) {
+            altKey = String.fromCharCode(code)
+            Scanray.altKeySequence = ''
+          }
+        }
+      } else {
+        Scanray.altKeySequence = ''
       }
 
-      if (options.enabledLogging)
-        console.log(`Pressed: [${e.key}] => [${e.ctrlKey ? 'Ctrl' : ''}${e.shiftKey ? 'Shift' : ''}${e.key.charCodeAt(0)}]`)
+      // skip mapping of prefix
+      if (Scanray.accumulatedScanData().length == 0 && Scanray.isPrefix(altKey || e.key)) {
+        Scanray.currentPrefix = altKey || e.key
+        return ''
+      }
+      if (e.altKey && e.code.startsWith('Numpad')) return '' // prevent alt sequences from being included in stream
 
       // convert special control sequences seen in AAMVA barcodes
       if (e.ctrlKey && e.code == 'KeyJ') return '[LF]' // Ctrl+J
@@ -111,6 +140,7 @@ export default class Scanray {
 
   static _resetStateAfterScan(): void {
     Scanray.currentPrefix = ' '
+    Scanray.altKeySequence = ''
   }
 
   static accumulatedScanData(): string {
@@ -137,10 +167,12 @@ export default class Scanray {
   }
 
   static _trapKeyboardEventsDuringScan(e: KeyboardEvent): void {
-    if (Scanray.canBlockKeyboardEvents()) {
-      e.preventDefault()
-      //if (Scanray.options.enabledLogging) console.log(`Blocked keyboard event during scan`)
-    }
+    if (Scanray.canBlockKeyboardEvents()) e.preventDefault()
+  }
+
+  static _trapAltKeyListener(e: KeyboardEvent): void {
+    // prevent windows alt-key combinations from being entered into browser window
+    if (e.altKey && e.code.startsWith('Numpad')) e.preventDefault()
   }
 
   static _trapCtrlKeyListener(e: KeyboardEvent): void {

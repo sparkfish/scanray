@@ -18,9 +18,9 @@
   onMount(() => {
     const options = {
       blockKeyboardEventsDuringScan: true,
+      blockAltKeyEvents: true,
       enabledLogging: false,
-      prefixKeyCodes: [126], // ~
-      suffixKeyCodes: [13], // <enter>
+      prefixKeyCodes: [182] // '¶'  // optional prefix improves scanning experience within web browser
     }
     Scanray.activateMonitor(options)
 
