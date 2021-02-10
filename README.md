@@ -1,9 +1,13 @@
+<p align="center">
+        <img src="scanray.svg" width="500" align="center"></image> <br />
+        <h3 align="center"><i>Scanner events to streamline data extraction from ID cards into web-based EMRs</i></h3>
+</p>
 
-# Barcode Scanner for Electronic Medical Records
+<hr size="4" noshade="noshade" />
 
-This solution offers a PDF417 bardcode scanner for quickly and accurately scanning the backs of Drivers Licenses and Health ID cards directly into web-based EMRs using inexpensive laser barcode scanners.  Scan events are easily captured to provide scanned details as Javascript objects.
+**Scanray** is a barcode scanner helper for use with web-based Electronic Medical Records (EMR) systems.  With Scanray, PDF417 bardcode scanners can quickly and accurately extract the backs of Drivers Licenses and Health ID cards directly into web-based EMRs using inexpensive laser barcode scanners.  Scan events are easily captured to provide extracted data elements as native Javascript objects.
 
-It's a common need in the healthcare settings to enter patient demographics accurately and quickly.  This is often entered manually or by using a TWAIN scanner to capture the details from images of these ID cards.  However, using a document scanner is both slow and presents accuracy problems.  Document scanners experience mechanical malfunctions frequently and require more expensive models in order to sustain high volume usage.
+It's a common need in the healthcare settings to enter patient demographics accurately and quickly.  This is often entered manually or by using a TWAIN scanner to capture the details from images of these ID cards.  However, using a document scanner is both slow and presents accuracy problems.  Document scanners experience mechanical malfunctions frequently and require more expensive models in order to sustain high volume usage and sufficient image quality.
 
 This sample project includes the scan capture tooling as well as a test pages for validation purposes.
 
@@ -136,14 +140,18 @@ npm start
 Navigate to [localhost:8080](http://localhost:8080) to use the local test application.
 
 
-## TODO
+## Roadmap
 
+- [X] Suppress browser's keyboard events that conflict with AAMVA bardcode data injected into keyboard stream
+- [X] Parse AAMVA data elements into native javascript objects
+- [X] Parse Health ID Card data elements into native javascript objects
+- [X] Expose scan events and extracted data as document events (e.g, for use w/ `document.addEventListener`)
 - [ ] Convert from static Scanray to object instance
 - [ ] Add more options to code more parameterizable
 - [ ] Add trace level setting for console logging
 - [ ] Issue PR to onScan.js to get away from deprecated `keyCode` references
 - [ ] Issue PR to onScan.js to add `scanStart` and `scanEnd` events
-- [ ] Issue PR to onScan.js to track prefix from start of new scan and add requirePrefix param to `onScan.isScanInProgressFor()`
+- [ ] Issue PR to onScan.js to track prefix from start of new scan and add `requirePrefix` param to `onScan.isScanInProgressFor()`
 
 
 ## Credits
