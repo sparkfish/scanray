@@ -267,6 +267,14 @@ UNK = Unknown
     return this.getSegmentValue('DAQ', undefined) || ''
   }
 
+  public get expirationDate(): string {
+    return this.getSegmentDate('DBA', undefined) || ''
+  }
+
+  public get issueDate(): string {
+    return this.getSegmentDate('DBD', undefined) || ''
+  }
+
   public get ssn(): string {
     return this.getSegmentValue('DBK', undefined) || this.getSegmentValue('DBM', undefined) || ''
   }
