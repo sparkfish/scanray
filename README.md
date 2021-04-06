@@ -1,103 +1,163 @@
-# TSDX User Guide
+<p align="center">
+        <img src="scanray.svg" width="500" align="center"></image> <br />
+        <h3 align="center"><i>Scanner events to streamline data extraction from ID cards into web-based EMRs</i></h3>
+</p>
 
-Congrats! You just saved yourself hours of work by bootstrapping this project with TSDX. Let’s get you oriented with what’s here and how to use it.
+<hr size="4" noshade="noshade" />
 
-> This TSDX setup is meant for developing libraries (not apps!) that can be published to NPM. If you’re looking to build a Node app, you could use `ts-node-dev`, plain `ts-node`, or simple `tsc`.
+**Scanray** is a barcode scanner helper for use with web-based Electronic Medical Records (EMR) systems.  With Scanray, PDF417 bardcode scanners can quickly and accurately extract the backs of Drivers Licenses and Health ID cards directly into web-based EMRs using inexpensive laser barcode scanners.  Scan events are easily captured to provide extracted data elements as native Javascript objects.
 
-> If you’re new to TypeScript, checkout [this handy cheatsheet](https://devhints.io/typescript)
+It's a common need in the healthcare settings to enter patient demographics accurately and quickly.  This is often entered manually or by using a TWAIN scanner to capture the details from images of these ID cards.  However, using a document scanner is both slow and presents accuracy problems.  Document scanners experience mechanical malfunctions frequently and require more expensive models in order to sustain high volume usage and sufficient image quality.
 
-## Commands
+This sample project includes the scan capture tooling as well as a test pages for validation purposes.
 
-TSDX scaffolds your new library inside `/src`.
+<p align="center"><img src="public/hc-sample.png" alt="Health ID Card Sample" /></p>
+<p align="center"><img src="public/dl-sample.png" alt="AAMVA ID Card Sample" /></p>
 
-To run TSDX, use:
+# Browser Scan Events
 
-```bash
-npm start # or yarn start
+When barcodes are scanned, they inject the scanned data into the keyboard stream.  However, this data is not formatted in a way that is easily parsed.  Further, there are key events that cause strange behaviors to occur within the browser, such as opening up the "Downloads" dialog by injecting a `Ctrl+J` (which also represents a `line feed`).
+
+To simplify the scanning process, this packge intercepts these scan events to translate them into subscribable `healthIdScan` or `aamvaIdScan` events.  When these events are triggered, you will receive a Javascript object that provides the details from the ID that are pertinent to healthcare settings.
+
+
+```javascript
+  import Scanray from "./scanray";
+
+  // activate passive listening to enable scan events
+  Scanray.activateMonitor();
+
+  // access values from scan event detail
+  document.addEventListener("healthIdScan", (e) => {
+    console.log(`healthIdScan: [${e.detail.toJson()}]`);
+  });
+  document.addEventListener("aamvaIdScan", (e) => {
+    console.log(`aamvaIdScan: [${e.detail.toJson()}]`);
+  });
 ```
 
-This builds to `/dist` and runs the project in watch mode so any edits you save inside `src` causes a rebuild to `/dist`.
+Scan events capture fielded elements so that they can easily be bound to HTML forms:
 
-To do a one-off build, use `npm run build` or `yarn build`.
+<p align="center"><img src="public/scan-sample.png" alt="Card Scanning Event" /></p>
 
-To run tests, use `npm test` or `yarn test`.
+# Health Identification Cards
 
-## Configuration
+Health ID Cards identify insurance and patient details to facilitate health care transactions and to provide input data for such transactions.  Very basic insurance and patient identification information is provided on all Health ID cards.  However, this information varies significantly depending on the payer with additional information being provided by various carriers.
 
-Code quality is set up for you with `prettier`, `husky`, and `lint-staged`. Adjust the respective fields in `package.json` accordingly.
+Required fields on Health ID cards:
 
-### Jest
+  * firstName
+  * lastName
+  * issuerId
+  * cardholderId
+  * cardType
+## Example
 
-Jest tests are set up to run with `npm test` or `yarn test`.
+**BCBS - Blue Cross Blue Shield**
 
-### Bundle Analysis
-
-[`size-limit`](https://github.com/ai/size-limit) is set up to calculate the real cost of your library with `npm run size` and visualize the bundle with `npm run analyze`.
-
-#### Setup Files
-
-This is the folder structure we set up for you:
-
-```txt
-/src
-  index.tsx       # EDIT THIS
-/test
-  blah.test.tsx   # EDIT THIS
-.gitignore
-package.json
-README.md         # EDIT THIS
-tsconfig.json
-```
-
-### Rollup
-
-TSDX uses [Rollup](https://rollupjs.org) as a bundler and generates multiple rollup configs for various module formats and build settings. See [Optimizations](#optimizations) for details.
-
-### TypeScript
-
-`tsconfig.json` is set up to interpret `dom` and `esnext` types, as well as `react` for `jsx`. Adjust according to your needs.
-
-## Continuous Integration
-
-### GitHub Actions
-
-Two actions are added by default:
-
-- `main` which installs deps w/ cache, lints, tests, and builds on all pushes against a Node and OS matrix
-- `size` which comments cost comparison of your library on every pull request using [`size-limit`](https://github.com/ai/size-limit)
-
-## Optimizations
-
-Please see the main `tsdx` [optimizations docs](https://github.com/palmerhq/tsdx#optimizations). In particular, know that you can take advantage of development-only optimizations:
-
-```js
-// ./types/index.d.ts
-declare var __DEV__: boolean;
-
-// inside your code...
-if (__DEV__) {
-  console.log('foo');
+```javascript
+{
+  "firstName":"MOSES",
+  "lastName":"GARCIA",
+  "middleName":"N",
+  "cardType":"WH",
+  "issuerId":"9118772604",
+  "cardholderId":"960235001",
+  "groupNumber":"8F9999",
+  "issueDate":"2016-10-08",
+  "rxBin":"610444",
+  "rxPcn":"9999"
 }
 ```
 
-You can also choose to install and use [invariant](https://github.com/palmerhq/tsdx#invariant) and [warning](https://github.com/palmerhq/tsdx#warning) functions.
+**UHC - United Healthcare**
+```javascript
+{
+  "firstName":"JOSE",
+  "lastName":"SMITH",
+  "middleName":"MARCO",
+  "birthDate":"1986-06-23",
+  "cardType":"WH",
+  "issuerId":"9101004444",
+  "cardholderId":"ZGP923333171"
+}
+```
 
-## Module Formats
 
-CJS, ESModules, and UMD module formats are supported.
+# AAMVA Identification Cards (aka Drivers Licenses)
 
-The appropriate paths are configured in `package.json` and `dist/index.js` accordingly. Please report if any issues are found.
+Drivers Licenses and ID Cards produced in recent years comply with standards set forth by AAMVA to include quite a number of details about the card holder.  Virtually all demographic type fields are provided by the scan events.  However, not all values are extracted using this package since some details are not pertinent to the health care setting.
 
-## Named Exports
+## Example
 
-Per Palmer Group guidelines, [always use named exports.](https://github.com/palmerhq/typescript#exports) Code split inside your React app instead of your React library.
+**Drivers License**
 
-## Including Styles
+```javascript
+{
+  "firstName":"JOHN",
+  "middleName":"QUINCY",
+  "lastName":"PUBLIC",
+  "suffix":"JR",
+  "birthDate":"1970-01-31",
+  "sex":"M",
+  "issuerId":"636026",
+  "cardType":"AAMVA-DL",
+  "version":8,
+  "race":"W",
+  "ethnicity":"W",
+  "eyeColor":"GRN",
+  "hairColor":"BRO",
+  "weight":"180 lb",
+  "height":"069 in",
+  "streetAddress1":"789 E OAK ST",
+  "streetAddress2":"APT 1",
+  "city":"ANYTOWN",
+  "state":"CA",
+  "zip":"90223",
+  "country":"USA",
+  "birthPlace":"OMAHA",
+  "isDonor":true,
+  "cardholderId":"1234567890"
+}
+```
 
-There are many ways to ship styles, including with CSS-in-JS. TSDX has no opinion on this, configure how you like.
+---
 
-For vanilla CSS, you can include it at the root directory and add it to the `files` section in your `package.json`, so that it can be imported separately by your users and run through their bundler's loader.
+## Getting Started
 
-## Publishing to NPM
+Install dependencies...
 
-We recommend using [np](https://github.com/sindresorhus/np).
+```bash
+npm install
+```
+
+...then start
+
+```bash
+npm start
+```
+
+Navigate to [localhost:8080](http://localhost:8080) to use the local test application.
+
+
+## Roadmap
+
+- [X] Suppress browser's keyboard events that conflict with AAMVA bardcode data injected into keyboard stream
+- [X] Parse AAMVA data elements into native javascript objects
+- [X] Parse Health ID Card data elements into native javascript objects
+- [X] Expose scan events and extracted data as document events (e.g, for use w/ `document.addEventListener`)
+- [ ] Convert from static Scanray to object instance
+- [ ] Add more options to code more parameterizable
+- [ ] Add trace level setting for console logging
+- [ ] Issue PR to onScan.js to get away from deprecated `keyCode` references
+- [ ] Issue PR to onScan.js to add `scanStart` and `scanEnd` events
+- [ ] Issue PR to onScan.js to track prefix from start of new scan and add `requirePrefix` param to `onScan.isScanInProgressFor()`
+
+
+## Credits
+
+This library heavily relies on [onScan.js](https://github.com/axenox/onscan.js) by Andrej Kabachnik.
+
+## License
+
+This is an open source project licensed under MIT.
