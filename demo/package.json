@@ -1,0 +1,41 @@
+{
+  "name": "scanray-demo",
+  "version": "1.0.0",
+  "description": "An example site showing how to use the scanray package.",
+  "scripts": {
+    "start": "snowpack dev",
+    "build": "snowpack build"
+  },
+  "keywords": [
+    "Barcode Scanning Parser",
+    "PDF417",
+    "AAMVA",
+    "Drivers License",
+    "Health ID Card",
+    "Laser Scanning",
+    "Electronic Health Records",
+    "Electronic Medical Records",
+    "EMR",
+    "EHR"
+  ],
+  "author": "Sparkfish",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/preset-typescript": "^7.12.13",
+    "@snowpack/plugin-babel": "^2.1.6",
+    "@snowpack/plugin-dotenv": "^2.0.5",
+    "@snowpack/plugin-svelte": "^3.5.0",
+    "snowpack": "^3.0.1",
+    "typescript": "^4.1.3"
+  },
+  "dependencies": {
+    "@svelteschool/svelte-forms": "^0.7.0",
+    "@types/luxon": "^1.25.1",
+    "luxon": "^1.26.0",
+    "onscan.js": "^1.5.2",
+    "pdf417-generator": "^1.0.2",
+    "scanray": "file:../../scanray",
+    "string-algorithms": "^1.0.31",
+    "svelte": "^3.24.0"
+  }
+}

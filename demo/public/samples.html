@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Sample Barcodes</title>
+
+    <style type="text/css">
+      body {
+        margin: 100px;
+        font-family: Arial, Helvetica, sans-serif;
+        background-color: #f9f6f6;
+        min-height: 100vh;
+      }
+
+      #barcodes {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: row;
+        height: 100vh;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .barcode {
+        width: 500px;
+        height: 500px;
+        flex: auto;
+        text-align: center;
+      }
+
+      label {
+        display: block;
+        color: darkgrey;
+        font-weight: bold;
+        margin: 20px 0 4px 0;
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 1.9px;
+        line-height: 2;
+      }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/gh/pkoretic/pdf417-generator@master/lib/libbcmath.js" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/gh/pkoretic/pdf417-generator@master/lib/bcmath.js" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/gh/pkoretic/pdf417-generator@master/lib/pdf417.js" type="text/javascript"></script>
+
+    <script>
+      // generates barcode and add it to DOM
+      function addBarcode(caption, value) {
+        let barcode = document.createElement('div')
+        let label = document.createElement('label')
+        let canvas = document.createElement('canvas')
+        barcode.appendChild(label)
+        barcode.appendChild(canvas)
+        barcode.classList.add('barcode')
+        label.innerText = caption
+        document.getElementById('barcodes').appendChild(barcode)
+        window.PDF417.draw(value, canvas)
+      }
+
+      // prevent key sequences from triggering browser controls (as known to occur AAMVA barcodes)
+      document.addEventListener('keydown', (e) => {
+        e.preventDefault()
+      })
+    </script>
+  </head>
+
+  <body>
+    <div>Example Barcodes from DLs and Health ID Cards</div>
+    <div id="barcodes"></div>
+  </body>
+
+  <script>
+    // generate sample Health ID Cards
+    addBarcode('Health ID Card #1', '%H^12345678901^^^BN123456^PC1234567890^GR123456789012345?  ')
+    addBarcode('Health ID Card #2', '%WH9101004444ZGP923333171^SMITH/JOSE/MARCO^DB19860623?     ')
+    addBarcode('Health ID Card #3', '%WH9118772604960235001^GARCIA/MOSES/N^GR8F9999^BN610444^PC9999^RGUHC^DI20161008?   ')
+    addBarcode('Health ID Card #4', '%WH9118772604970370294^SAMPLE/WILLIAM/C^GR70000^BN610097^PC9999^RGCOS^DI20190413? ')
+
+    // generate sample Drivers License / ID Cards (AAMVA)
+    addBarcode('AAMVA Card #1', '@\n\nANSI 636015080001DL00310283DLDCACM\nDDAF\nDDB10102016\nDCBNONE\nDCDNONE\nDBA01162026\nDCSSMITH\nDDEN\nDACJOHN\nDDFN\nDADMICHAEL\nDDGN\nDBD01272020\nDBB02121966\nDBC1\nDAYBRO\nDAZBRO\nDAU071 IN\nDAW160\nDCLW\nDDK1\nDAG1234 MIDWAY RD\nDAIADDISON\nDAJTX\nDAK750010000  \nDCK03330779  20200128\nDAQ0333779\nDCF07121010115207915749\nDCGUSA\n\n')
+    addBarcode('AAMVA Card #2', '@\n\nANSI 636004090001DL00310235DLDCAC\nDCBNONE\nDCDM\nDBA04152026\nDCSDoe\nDACJohn\nDADNONE\nDBD04152020\nDBB04152004\nDBC1\nDAYBRO\nDAU072 in\nDAG123 Main Street\nDAIAny Town\nDAJPA\nDAK123456     \nDAQ1234567890\nDCFNONE\nDCGUSA\nDDEN\nDDFN\nDAZBRO\nDDH04152022\nDDI04152023\nDDJ04152025')
+    addBarcode('AAMVA Card #3', '@\n\nANSI 636026080102DL00410288ZA03290015DLDAQD12345678\nDCSPUBLIC\nDDEN\nDACJOHN\nDCUJR\nDDFN\nDADQUINCY\nDDGN\nDCAD\nDCIOMAHA\nDCBNONE\nDCDNONE\nDBNPUCKY\nDBGSTICKS\nDBSJ\nDBD08242015\nDBB01311970\nDBA01312035\nDBC1\nDCJAUDIT\nDAU069 in\nDAYGRN\nDAG789 E OAK ST\nDAHAPT 1\nDAIANYTOWN\nDAJCA\nDAK902230000\nDCF83D9BN217QO983B1\nDCGUSA\nDAW180\nDAZBRO\nDCK12345678900000000000\nDDB02142014\nDDK1\nZAZAAN\nZAB\nZAC')
+    addBarcode('AAMVA Card #4', '@\n\nANSI 636000100002DL00410278ZV03190008DLDAQT64235789\nDCSSAMPLE\nDDEN\nDACMICHAEL\nDDFN\nDADJOHN\nDDGN\nDCUJR\nDCAD\nDCBK\nDCDPH\nDBD06062019\nDBB06061986\nDBA12102024\nDBC1\nDAU068 in\nDAYBRO\nDAG2300 WEST BROAD STREET\nDAIRICHMOND\nDAJVA\nDAK232690000  \nDCF2424244747474786102204\nDCGUSA\nDCK123456789\nDDAF\nDDB06062018\nDDC06062020\nDDD1\nZVZVA01')
+
+
+  </script>
+</html>
