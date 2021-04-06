@@ -1,17 +1,21 @@
-import  Scanray from '../src/index';
+import Scanray from '../src/index';
 import AamvaIdCard from '../src/adapters/aamvaIdCard';
-import healthIdCard from  '../src/adapters/healthIdCard';
+import healthIdCard from '../src/adapters/healthIdCard';
 
-const exampleEncodedString:string = '%WH9104440260ZGP444461171^SMITH/GABRIEL^DB19860101?';
+const exampleEncodedString: string =
+  '%WH9104440260ZGP444461171^SMITH/GABRIEL^DB19860101?';
 
 Scanray.activateMonitor({
   blockKeyboardEventsDuringScan: true,
   blockAltKeyEvents: true,
   enabledLogging: false,
-  prefixKeyCodes: [182] // '¶'  // optional prefix improves scanning experience within web browser
+  prefixKeyCodes: [182], // '¶'  // optional prefix improves scanning experience within web browser
 });
 
-let cardInfo:AamvaIdCard|healthIdCard = Scanray.onScan(exampleEncodedString, true); // Send in the "scanned" data.
+let cardInfo: AamvaIdCard | healthIdCard = Scanray.onScan(
+  exampleEncodedString,
+  true
+); // Send in the "scanned" data.
 
 describe('example_encoded_string_does_evaluate', () => {
   it('gets_first_name', () => {

@@ -1,2 +1,2 @@
-declare module 'string-algorithms'
-declare module 'onscan.js'
+declare module 'string-algorithms';
+declare module 'onscan.js';

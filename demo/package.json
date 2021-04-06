@@ -4,7 +4,8 @@
   "description": "An example site showing how to use the scanray package.",
   "scripts": {
     "start": "snowpack dev",
-    "build": "snowpack build"
+    "build": "snowpack build",
+    "lint": "tsdx lint --fix"
   },
   "keywords": [
     "Barcode Scanning Parser",
