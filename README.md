@@ -31,9 +31,9 @@ Using NPM you can quickly install **Scanray** using the `npm i @sparkfish/scanra
 To get started with the basics you only need to import these items. Scanray is the main utility. Each cards type contains card specific parsers and the data class in which you will access data.
 
 ```
-import Scanray from '../src/index';
-import AamvaIdCard from '../src/adapters/aamvaIdCard'; // Optional
-import healthIdCard from '../src/adapters/healthIdCard'; // Optional
+import Scanray from '@sparkfish/scanray';
+import AamvaIdCard from '@sparkfish/scanray/adapters/aamvaIdCard'; // Optional
+import healthIdCard from '@sparkfish/scanray/adapters/healthIdCard'; // Optional
 ```
 
 The card adapter imports are optional. This is because Scanray will automatically dump the contents of the card into the correct adapter. However if you are working in Typescript it is a good idea to import the class definitions to avoid compiling errors or warnings.
@@ -43,9 +43,9 @@ The card adapter imports are optional. This is because Scanray will automaticall
 Once Scanray is installed in your project and you have imported the minimum elements it is time to wire Scanray up to your application. The example below shows a simple and basic example.
 
 ```
-import Scanray from '../src/index';
-import AamvaIdCard from '../src/adapters/aamvaIdCard';
-import healthIdCard from '../src/adapters/healthIdCard';
+import Scanray from '@sparkfish/scanray';
+import AamvaIdCard from '@sparkfish/scanray/adapters/aamvaIdCard'; // Optional
+import healthIdCard from '@sparkfish/scanray/adapters/healthIdCard'; // Optional
 
 const exampleEncodedString: string =
   '%WH9104440260ZGP444461171^SMITH/GABRIEL^DB19860101?';
