@@ -1,163 +1,126 @@
-<p align="center">
-        <img src="scanray.svg" width="500" align="center"></image> <br />
-        <h3 align="center"><i>Scanner events to streamline data extraction from ID cards into web-based EMRs</i></h3>
-</p>
+![Scanray Logo](https://github.com/sparkfish/scanray/blob/HEAD/scanray.svg)
 
-<hr size="4" noshade="noshade" />
+<center><strong><h3>Scanner events to streamline data extraction from ID cards into web-based EMRs</h3></strong></center>
+<hr>
+**Scanray** is a barcode scanner utility package for use with web-based Electronic Medical Records (EMR) systems. With Scanray, PDF417 bardcode scanners can quickly and accurately extract the backs of Drivers Licenses and Health ID cards directly into web-based EMRs using inexpensive laser barcode scanners. Scan events are easily captured to provide extracted data elements as native Javascript objects.
 
-**Scanray** is a barcode scanner helper for use with web-based Electronic Medical Records (EMR) systems.  With Scanray, PDF417 bardcode scanners can quickly and accurately extract the backs of Drivers Licenses and Health ID cards directly into web-based EMRs using inexpensive laser barcode scanners.  Scan events are easily captured to provide extracted data elements as native Javascript objects.
+It's a common need in the healthcare settings to enter patient demographics accurately and quickly. This is often entered manually or by using a TWAIN scanner to capture the details from images of these ID cards. However, using a document scanner is both slow and presents accuracy problems. Document scanners experience mechanical malfunctions frequently and require more expensive models in order to sustain high volume usage and sufficient image quality.
 
-It's a common need in the healthcare settings to enter patient demographics accurately and quickly.  This is often entered manually or by using a TWAIN scanner to capture the details from images of these ID cards.  However, using a document scanner is both slow and presents accuracy problems.  Document scanners experience mechanical malfunctions frequently and require more expensive models in order to sustain high volume usage and sufficient image quality.
+## Quick Start
 
-This sample project includes the scan capture tooling as well as a test pages for validation purposes.
-
-<p align="center"><img src="public/hc-sample.png" alt="Health ID Card Sample" /></p>
-<p align="center"><img src="public/dl-sample.png" alt="AAMVA ID Card Sample" /></p>
-
-# Browser Scan Events
-
-When barcodes are scanned, they inject the scanned data into the keyboard stream.  However, this data is not formatted in a way that is easily parsed.  Further, there are key events that cause strange behaviors to occur within the browser, such as opening up the "Downloads" dialog by injecting a `Ctrl+J` (which also represents a `line feed`).
-
-To simplify the scanning process, this packge intercepts these scan events to translate them into subscribable `healthIdScan` or `aamvaIdScan` events.  When these events are triggered, you will receive a Javascript object that provides the details from the ID that are pertinent to healthcare settings.
+### Requirements
+* Node >=10
+* A Physical or Virtual Scanner
 
 
-```javascript
-  import Scanray from "./scanray";
+### Installation
+Using NPM you can quickly install **Scanray** using the ```npm i @sparkfish/scanray``` command. Alternatively you can install Scanray using Yarn with the following command ```yarn add @sparkfish/scanray```. 
 
-  // activate passive listening to enable scan events
-  Scanray.activateMonitor();
+### Importing
+To get started with the basics you only need to import these items. Scanray is the main utility. Each cards type contains card specific parsers and the data class in which you will access data. 
 
-  // access values from scan event detail
-  document.addEventListener("healthIdScan", (e) => {
-    console.log(`healthIdScan: [${e.detail.toJson()}]`);
-  });
-  document.addEventListener("aamvaIdScan", (e) => {
-    console.log(`aamvaIdScan: [${e.detail.toJson()}]`);
-  });
+```
+import Scanray from '../src/index';
+import AamvaIdCard from '../src/adapters/aamvaIdCard'; // Optional
+import healthIdCard from '../src/adapters/healthIdCard'; // Optional
 ```
 
-Scan events capture fielded elements so that they can easily be bound to HTML forms:
+The card adapter imports are optional. This is because Scanray will automatically dump the contents of the card into the correct adapter. However if you are working in Typescript it is a good idea to import the class definitions to avoid compiling errors or warnings.
 
-<p align="center"><img src="public/scan-sample.png" alt="Card Scanning Event" /></p>
+-- ***as more adapters or methods become available this section will be updated*** --
 
-# Health Identification Cards
+### Testing Installation
+Once Scanray is installed in your project and you have imported the minimum elements it is time to wire Scanray up to your application. The example below shows a simple and basic example.
 
-Health ID Cards identify insurance and patient details to facilitate health care transactions and to provide input data for such transactions.  Very basic insurance and patient identification information is provided on all Health ID cards.  However, this information varies significantly depending on the payer with additional information being provided by various carriers.
+```
+import Scanray from '../src/index';
+import AamvaIdCard from '../src/adapters/aamvaIdCard';
+import healthIdCard from '../src/adapters/healthIdCard';
 
-Required fields on Health ID cards:
+const exampleEncodedString: string =
+  '%WH9104440260ZGP444461171^SMITH/GABRIEL^DB19860101?';
 
-  * firstName
-  * lastName
-  * issuerId
-  * cardholderId
-  * cardType
-## Example
+Scanray.activateMonitor({
+  blockKeyboardEventsDuringScan: true,
+  blockAltKeyEvents: true,
+  enabledLogging: false,
+  prefixKeyCodes: [182], // '¶'  // optional prefix improves scanning experience within web browser
+});
 
-**BCBS - Blue Cross Blue Shield**
-
-```javascript
-{
-  "firstName":"MOSES",
-  "lastName":"GARCIA",
-  "middleName":"N",
-  "cardType":"WH",
-  "issuerId":"9118772604",
-  "cardholderId":"960235001",
-  "groupNumber":"8F9999",
-  "issueDate":"2016-10-08",
-  "rxBin":"610444",
-  "rxPcn":"9999"
-}
+let cardInfo: AamvaIdCard | healthIdCard = Scanray.onScan(
+  exampleEncodedString,
+  true // return data directly instead of through browser events
+); // Send in the "scanned" data.
 ```
 
-**UHC - United Healthcare**
-```javascript
-{
-  "firstName":"JOSE",
-  "lastName":"SMITH",
-  "middleName":"MARCO",
-  "birthDate":"1986-06-23",
-  "cardType":"WH",
-  "issuerId":"9101004444",
-  "cardholderId":"ZGP923333171"
-}
-```
+If everything worked as expected you should be greeted with some user data inside the ```cardInfo``` variable. Look below in the Class reference section for more information on what data becomes available. 
+
+## Class References
+
+### Card Adapters [AamvaIdCard, healthIdCard]
+The card adapters share the same public getters.
+
+##### Note: 
+1) <small>In type script getters are class methods. However you can access them without directly calling the method. </small>
+```EX: card.lastName = card.lastName()```
+
+| Getter 		   	| Return Type			| Description |
+|---------------	|------------			|-------------|
+|```card.fullName```		| ```string```| Card holders full name |
+|```card.firstName```		|```string```| Card holders first name |
+|```card.middleName```		| ```string```| Card holders middle name |
+|```card.lastName```		| ```string```| Card holders last name |
+|```card.suffix```			| ```string```| Card holders name prefix |
+|```card.prefix```			| ```string```| Card holders name suffix |
+|```card.birthDate```		|```string```| Card holders birthdate |
+|```card.sex```				| ```string```| Card holders sex |
+|```card.issuerId```		| ```string```| Card issuers id |
+|```card.type```				| ```string```| Card type |
+|```card.version```			| ```number```| Card version |
+|```card.race```				| ```string```| Card holders race |
+|```card.ethnicity```		| ```string```| Card holders ethnicity |
+|```card.eyeColor```		| ```string```| Card holders eye color |
+|```card.hairColor```		| ```string```| Card holders hair color |
+|```card.weight```			| ```string```| Card holders weight |
+|```card.height```			| ```string```| Card holders height |
+|```card.streetAddress1```	| ```string```| Card holders street address |
+|```card.streetAddress2```	| ```string```| Card holders street address second line |
+|```card.city```				| ```string```| Card holders city |
+|```card.state```			| ```string```| Card holders state |
+|```card.zip```				| ```string```| Card holders zip code |
+|```card.country```			| ```string```| Card holders country |
+|```card.birthPlace```		| ```string```| Card holders birth place |
+|```card.isDonor```			| ```boolean```| Card holders donor status |
+|```card.isVeteran```		| ```boolean```| Card holders veteran status |
+|```card.cardHolderId```	| ```string```| Card holders id |
+|```card.expirationDate```	| ```string```| Cards expiration date |
+|```card.issueDate```		| ```string```| Cards issue date |
+|```card.ssn```				| ```string```| Card holders ssn |
+
+| Method 		   	| Return Type			| Description |
+|---------------	|------------			|-------------|
+| ```card.toJson()``` | ```JSON```| Convert class data to Json|
+--
+### Scanray
+
+***scanrayOptions***
+
+| scanrayOptions   	| Required			| Type           |
+|---------------		|------------			| ---------------|
+| ```blockKeyboardEventsDuringScan``` 	| <span style="color: green">Optional</span> | ```boolean```|
+| ```blockAltKeyEvents ``` 				| <span style="color: green">Optional</span> | ```boolean```|
+| ```blockBadKeyboardShortcutEvents ```	| <span style="color: green">Optional</span> | ```boolean```|
+| ```enabledLogging ```						| <span style="color: green">Optional</span> | ```boolean```|
+| ```prefixKeyCodes ```						| <span style="color: green">Optional</span> | ```number<array>```|
+| ```suffixKeyCodes ```						| <span style="color: green">Optional</span> | ```number<array>```|
+--
+#### Scanray.activateMonitor(options: scanrayOptions)
+This method activates the event monitor to listen for code scans. It takes in the series of optional ```scanrayOptions``` object. The code scanner is attached to the ```document``` so that we enable the code scanning for the whole document.
+
+#### Scanray.deactivateMonitor()
+This method resets the scanner state and removes the event listeners from the document. Then finally it removes the scanner itself from the document.
+
+#### Scanray.onScan(scanData: string, returnData?: boolean)
+This method is called when the document has triggered the scan event and the Scanray listeners have detected it. It takes in the scanData and determines which adapter type it is. It then fires a new event that the adapter has been filled. Or if you have sent in the returnData param and it is true it will return the data directly.
 
 
-# AAMVA Identification Cards (aka Drivers Licenses)
-
-Drivers Licenses and ID Cards produced in recent years comply with standards set forth by AAMVA to include quite a number of details about the card holder.  Virtually all demographic type fields are provided by the scan events.  However, not all values are extracted using this package since some details are not pertinent to the health care setting.
-
-## Example
-
-**Drivers License**
-
-```javascript
-{
-  "firstName":"JOHN",
-  "middleName":"QUINCY",
-  "lastName":"PUBLIC",
-  "suffix":"JR",
-  "birthDate":"1970-01-31",
-  "sex":"M",
-  "issuerId":"636026",
-  "cardType":"AAMVA-DL",
-  "version":8,
-  "race":"W",
-  "ethnicity":"W",
-  "eyeColor":"GRN",
-  "hairColor":"BRO",
-  "weight":"180 lb",
-  "height":"069 in",
-  "streetAddress1":"789 E OAK ST",
-  "streetAddress2":"APT 1",
-  "city":"ANYTOWN",
-  "state":"CA",
-  "zip":"90223",
-  "country":"USA",
-  "birthPlace":"OMAHA",
-  "isDonor":true,
-  "cardholderId":"1234567890"
-}
-```
-
----
-
-## Getting Started
-
-Install dependencies...
-
-```bash
-npm install
-```
-
-...then start
-
-```bash
-npm start
-```
-
-Navigate to [localhost:8080](http://localhost:8080) to use the local test application.
-
-
-## Roadmap
-
-- [X] Suppress browser's keyboard events that conflict with AAMVA bardcode data injected into keyboard stream
-- [X] Parse AAMVA data elements into native javascript objects
-- [X] Parse Health ID Card data elements into native javascript objects
-- [X] Expose scan events and extracted data as document events (e.g, for use w/ `document.addEventListener`)
-- [ ] Convert from static Scanray to object instance
-- [ ] Add more options to code more parameterizable
-- [ ] Add trace level setting for console logging
-- [ ] Issue PR to onScan.js to get away from deprecated `keyCode` references
-- [ ] Issue PR to onScan.js to add `scanStart` and `scanEnd` events
-- [ ] Issue PR to onScan.js to track prefix from start of new scan and add `requirePrefix` param to `onScan.isScanInProgressFor()`
-
-
-## Credits
-
-This library heavily relies on [onScan.js](https://github.com/axenox/onscan.js) by Andrej Kabachnik.
-
-## License
-
-This is an open source project licensed under MIT.

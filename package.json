@@ -1,6 +1,6 @@
 {
   "name": "@sparkfish/scanray",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Quickly and accurately scan PDF417 bardcodes from the backs of Drivers Licenses and Health ID cards directly into web-based EMRs using inexpensive laser barcode scanners.  To simplify the scanning process, this packge intercepts these scan events to translate them into subscribable `healthIdScan` or `aamvaIdScan` events.  When these events are triggered, you will receive a Javascript object that provides the details from the ID that are pertinent to healthcare settings.",
   "author": "SparkFish",
   "keywords": [
@@ -66,6 +66,7 @@
     "typescript": "^3.9.9"
   },
   "dependencies": {
+    "@sparkfish/scanray": "^1.1.1",
     "luxon": "^1.26.0",
     "onscan.js": "^1.5.2",
     "string-algorithms": "^1.0.31"
