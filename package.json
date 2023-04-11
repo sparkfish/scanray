@@ -31,7 +31,7 @@
   "dependencies": {
     "@svelteschool/svelte-forms": "^0.7.0",
     "@types/luxon": "^1.25.1",
-    "luxon": "^1.25.0",
+    "luxon": "^1.28.1",
     "onscan.js": "^1.5.2",
     "pdf417-generator": "^1.0.2",
     "string-algorithms": "^1.0.31",
