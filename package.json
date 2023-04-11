@@ -35,6 +35,6 @@
     "onscan.js": "^1.5.2",
     "pdf417-generator": "^1.0.2",
     "string-algorithms": "^1.0.31",
-    "svelte": "^3.24.0"
+    "svelte": "^3.49.0"
   }
 }
